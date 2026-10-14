@@ -22,8 +22,10 @@ export const metadata: Metadata = {
   title: { default: TITLE, template: "%s | hi here" },
   description: DESCRIPTION,
   applicationName: "hi here",
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
+    url: "/",
     siteName: "hi here",
     locale: "ko_KR",
     title: TITLE,
