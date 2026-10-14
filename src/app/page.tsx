@@ -35,6 +35,12 @@ export default function Home() {
         <Suspense fallback={null}>
           <PopularTags />
         </Suspense>
+        <Link
+          href="/catan"
+          className="flex h-11 items-center gap-2 rounded-full border border-black/15 px-5 text-sm font-medium hover:bg-zinc-100 dark:border-white/20 dark:hover:bg-zinc-800"
+        >
+          🎲 카탄 규칙 문의하기
+        </Link>
       </section>
 
       <section>

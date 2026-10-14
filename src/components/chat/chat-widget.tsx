@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { deleteConversation, getLatestConversation } from "@/app/actions/chat";
 import { SUGGESTED_QUESTIONS } from "@/lib/chat/guide";
@@ -10,6 +11,7 @@ const GREETING =
   "안녕하세요! hi here 이용 방법이 궁금하시면 편하게 물어보세요.";
 
 export function ChatWidget({ signedIn }: { signedIn: boolean }) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -104,8 +106,11 @@ export function ChatWidget({ signedIn }: { signedIn: boolean }) {
     setError(null);
   }
 
+  // The Catan rules page has its own dedicated chat.
+  if (pathname.startsWith("/catan")) return null;
+
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex flex-col items-start gap-3 print:hidden">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 print:hidden">
       {open && (
         <section
           role="dialog"

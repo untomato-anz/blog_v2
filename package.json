@@ -6,10 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "rag:ingest": "tsx --env-file=.env.local scripts/ingest.ts"
   },
   "dependencies": {
     "@google/genai": "^2.29.1",
+    "@pinecone-database/pinecone": "^9.0.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "@tiptap/extension-image": "^3.32.0",
@@ -21,7 +23,9 @@
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "tsx": "^4.23.15",
+    "unpdf": "^1.8.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

@@ -1,10 +1,11 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { SYSTEM_INSTRUCTION } from "@/lib/chat/guide";
 import { rateLimit } from "@/lib/chat/rate-limit";
+import { formatContext, retrieve } from "@/lib/rag/retrieve";
 import { isUuid } from "@/lib/blog/content";
 import { createClient } from "@/lib/supabase/server";
 
-const DEFAULT_CHAT_MODEL = "gemini-3.8-flash";
+const DEFAULT_CHAT_MODEL = "gemini-3.5-flash-lite";
 const MAX_MESSAGES = 10;
 const MAX_CHARS = 500;
 const MAX_STORED_MESSAGES = 200;
@@ -102,15 +103,18 @@ export async function POST(request: Request) {
   const ai = new GoogleGenAI({ apiKey });
   const encoder = new TextEncoder();
 
+  // RAG: ground the answer in indexed documents when something relevant is found.
+  const systemInstruction = SYSTEM_INSTRUCTION + formatContext(await retrieve(question));
+
   const startStream = () =>
     ai.models.generateContentStream({
       model: process.env.CHAT_MODEL || DEFAULT_CHAT_MODEL,
       contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.content }] })),
       config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
+        systemInstruction,
         temperature: 0.4,
         maxOutputTokens: 800,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
       },
     });
 
