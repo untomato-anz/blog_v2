@@ -1,8 +1,9 @@
 import Image from "next/image";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { UsernameForm } from "@/components/username-form";
 import { getCurrentUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export default function WelcomePage() {
   return (
@@ -19,6 +20,11 @@ async function Welcome() {
   if (!user) {
     redirect("/");
   }
+  if (user.username) {
+    redirect(`/@${user.username}`);
+  }
+
+  const suggestion = await suggestUsername(user.email);
 
   return (
     <>
@@ -35,14 +41,30 @@ async function Welcome() {
         가입을 환영합니다, {user.fullName ?? user.email}님!
       </h1>
       <p className="text-zinc-600 dark:text-zinc-400">
-        Google 계정으로 회원가입이 완료되었습니다.
+        마지막으로, 내 블로그의 아이디를 정해 주세요.
       </p>
-      <Link
-        href="/"
-        className="flex h-11 items-center rounded-full bg-foreground px-6 font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-      >
-        시작하기
-      </Link>
+      <UsernameForm suggestion={suggestion} />
     </>
   );
+}
+
+async function suggestUsername(email: string | undefined) {
+  const base =
+    (email?.split("@")[0] ?? "")
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "")
+      .slice(0, 16)
+      .padEnd(3, "0") || "hihere";
+
+  const supabase = await createClient();
+  const candidates = [
+    base,
+    ...Array.from({ length: 5 }, () => `${base}${Math.floor(100 + Math.random() * 900)}`),
+  ];
+  const { data } = await supabase
+    .from("profiles")
+    .select("username")
+    .in("username", candidates);
+  const taken = new Set((data ?? []).map((p) => p.username));
+  return candidates.find((c) => !taken.has(c)) ?? `${base}${Date.now() % 100000}`;
 }

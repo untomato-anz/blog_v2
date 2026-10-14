@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   images: {
-    remotePatterns: [new URL("https://lh3.googleusercontent.com/**")],
+    remotePatterns: [
+      new URL("https://lh3.googleusercontent.com/**"),
+      new URL("https://sdeffpxhruzcralodais.supabase.co/storage/v1/object/public/**"),
+    ],
   },
   turbopack: {
     rules: {

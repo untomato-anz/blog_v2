@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const NEW_USER_WINDOW_MS = 60_000;
-
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -15,12 +13,13 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      const { created_at, last_sign_in_at } = data.user;
-      const isNewUser =
-        !!last_sign_in_at &&
-        new Date(last_sign_in_at).getTime() - new Date(created_at).getTime() <
-          NEW_USER_WINDOW_MS;
-      if (isNewUser) {
+      // Anyone without a blog username yet goes through onboarding first.
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (!profile?.username) {
         next = "/welcome";
       }
 

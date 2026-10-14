@@ -1,20 +1,16 @@
+import Link from "next/link";
 import { Suspense } from "react";
-import { AuthButton } from "@/components/auth-button";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { PostCard } from "@/components/post-card";
 import { getCurrentUser } from "@/lib/auth";
+import { POST_CARD_SELECT, type PostCardData } from "@/lib/blog/queries";
+import { createClient } from "@/lib/supabase/server";
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col bg-zinc-50 font-sans dark:bg-black">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
-        <span className="text-lg font-semibold tracking-tight">blog_v2</span>
-        <Suspense fallback={<div className="h-10 w-32" />}>
-          <AuthButton />
-        </Suspense>
-      </header>
-
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center gap-8 px-6 py-24 text-center">
-        <h1 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight text-black sm:text-5xl dark:text-zinc-50">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-12 px-6 py-12">
+      <section className="flex flex-col items-center gap-6 text-center">
+        <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
           생각을 기록하고,
           <br />
           함께 나누는 공간
@@ -25,13 +21,38 @@ export default function Home() {
         <Suspense fallback={<div className="h-12" />}>
           <HeroCta />
         </Suspense>
-      </main>
-    </div>
+      </section>
+
+      <section>
+        <h2 className="border-b border-black/10 pb-3 text-lg font-bold dark:border-white/15">
+          최신 글
+        </h2>
+        <Suspense fallback={null}>
+          <LatestPosts />
+        </Suspense>
+      </section>
+    </main>
   );
 }
 
 async function HeroCta() {
   const user = await getCurrentUser();
+
+  if (user && !user.username) {
+    return (
+      <div className="flex flex-col items-center gap-3">
+        <p className="text-base font-medium">
+          거의 다 왔어요! 블로그 아이디만 정하면 시작할 수 있어요.
+        </p>
+        <Link
+          href="/welcome"
+          className="flex h-12 items-center rounded-full bg-foreground px-6 font-medium text-background"
+        >
+          블로그 아이디 정하기
+        </Link>
+      </div>
+    );
+  }
 
   if (user) {
     return (
@@ -49,4 +70,24 @@ async function HeroCta() {
       </p>
     </div>
   );
+}
+
+async function LatestPosts() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("posts")
+    .select(POST_CARD_SELECT)
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(20);
+
+  const posts = (data ?? []) as unknown as PostCardData[];
+  if (!posts.length) {
+    return (
+      <p className="py-10 text-center text-zinc-500">
+        아직 올라온 글이 없습니다. 첫 글을 써 보세요!
+      </p>
+    );
+  }
+  return posts.map((p) => <PostCard key={p.id} post={p} />);
 }
