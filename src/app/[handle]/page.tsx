@@ -1,12 +1,45 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { toggleFollow } from "@/app/actions/follows";
+import { JsonLd } from "@/components/json-ld";
 import { PostCard } from "@/components/post-card";
 import { getCurrentUser } from "@/lib/auth";
+import { profilePageLd } from "@/lib/blog/jsonld";
+import { getPublicProfile } from "@/lib/blog/public";
 import { POST_CARD_SELECT, type PostCardData } from "@/lib/blog/queries";
+import { parseHandle } from "@/lib/params";
+import { profilePath } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[handle]">): Promise<Metadata> {
+  const username = parseHandle((await params).handle);
+  if (!username) return {};
+  const profile = await getPublicProfile(username);
+  if (!profile) return { title: "블로그를 찾을 수 없습니다", robots: { index: false } };
+
+  const name = profile.full_name ?? username;
+  const title = `${name} (@${username})의 블로그`;
+  const description =
+    profile.bio || `${name}님이 hi here에 남긴 글을 모아 보세요.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: profilePath(username) },
+    openGraph: {
+      type: "profile",
+      url: profilePath(username),
+      title,
+      description,
+      username,
+      images: profile.avatar_url ? [{ url: profile.avatar_url }] : undefined,
+    },
+  };
+}
 
 export default function ProfilePage({ params }: PageProps<"/[handle]">) {
   return (
@@ -19,10 +52,8 @@ export default function ProfilePage({ params }: PageProps<"/[handle]">) {
 }
 
 async function Profile({ params }: { params: PageProps<"/[handle]">["params"] }) {
-  const { handle: rawHandle } = await params;
-  const handle = decodeURIComponent(rawHandle);
-  if (!handle.startsWith("@")) notFound();
-  const username = handle.slice(1).toLowerCase();
+  const username = parseHandle((await params).handle);
+  if (!username) notFound();
 
   const supabase = await createClient();
   const { data: profile } = await supabase
@@ -64,6 +95,14 @@ async function Profile({ params }: { params: PageProps<"/[handle]">["params"] })
 
   return (
     <>
+      <JsonLd
+        data={profilePageLd({
+          username: profile.username!,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          bio: profile.bio,
+        })}
+      />
       <section className="flex items-start gap-5 border-b border-black/10 pb-8 dark:border-white/15">
         {profile.avatar_url && (
           <Image

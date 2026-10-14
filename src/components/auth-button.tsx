@@ -53,6 +53,14 @@ export async function AuthButton() {
           {user.fullName ?? user.email}
         </span>
       </Link>
+      {user.username && (
+        <Link
+          href="/settings/profile"
+          className="hidden text-sm text-zinc-700 hover:underline md:inline dark:text-zinc-300"
+        >
+          프로필 설정
+        </Link>
+      )}
       <form action={signOut}>
         <button
           type="submit"

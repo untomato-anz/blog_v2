@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PostEditor } from "@/components/editor/post-editor";
 import { requireUser } from "@/lib/auth";
+import { getEditorContext } from "@/lib/blog/editor-context";
+
+export const metadata: Metadata = {
+  title: "새 글 쓰기",
+  robots: { index: false, follow: false },
+};
 
 export default function WritePage() {
   return (
@@ -14,5 +21,13 @@ export default function WritePage() {
 
 async function Editor() {
   const user = await requireUser();
-  return <PostEditor userId={user.id} />;
+  const ctx = await getEditorContext(user.id);
+  return (
+    <PostEditor
+      userId={user.id}
+      username={user.username}
+      hasBio={ctx.hasBio}
+      tagCandidates={ctx.tagCandidates}
+    />
+  );
 }

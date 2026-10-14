@@ -12,6 +12,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: number
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: never
+          role: string
+          user_id?: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: never
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           author_id: string
@@ -168,6 +224,17 @@ export type Database = {
           title: string
           updated_at: string
           view_count: number
+          slug: string | null
+          seo_title: string | null
+          seo_description: string | null
+          summary: string | null
+          tags: string[]
+          faq: Json
+          sources: Json
+          cover_image_alt: string | null
+          word_count: number
+          reading_minutes: number
+          content_updated_at: string
         }
         Insert: {
           author_id: string
@@ -183,6 +250,17 @@ export type Database = {
           title?: string
           updated_at?: string
           view_count?: number
+          slug?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          summary?: string | null
+          tags?: string[]
+          faq?: Json
+          sources?: Json
+          cover_image_alt?: string | null
+          word_count?: number
+          reading_minutes?: number
+          content_updated_at?: string
         }
         Update: {
           author_id?: string
@@ -198,6 +276,17 @@ export type Database = {
           title?: string
           updated_at?: string
           view_count?: number
+          slug?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          summary?: string | null
+          tags?: string[]
+          faq?: Json
+          sources?: Json
+          cover_image_alt?: string | null
+          word_count?: number
+          reading_minutes?: number
+          content_updated_at?: string
         }
         Relationships: [
           {

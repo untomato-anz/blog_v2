@@ -1,14 +1,25 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { JsonLd } from "@/components/json-ld";
 import { PostCard } from "@/components/post-card";
 import { getCurrentUser } from "@/lib/auth";
+import { websiteLd } from "@/lib/blog/jsonld";
+import { getPopularTags } from "@/lib/blog/public";
 import { POST_CARD_SELECT, type PostCardData } from "@/lib/blog/queries";
+import { SITE_TITLE, tagPath } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "/", title: SITE_TITLE },
+};
 
 export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-12 px-6 py-12">
+      <JsonLd data={websiteLd()} />
       <section className="flex flex-col items-center gap-6 text-center">
         <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
           생각을 기록하고,
@@ -20,6 +31,9 @@ export default function Home() {
         </p>
         <Suspense fallback={<div className="h-12" />}>
           <HeroCta />
+        </Suspense>
+        <Suspense fallback={null}>
+          <PopularTags />
         </Suspense>
       </section>
 
@@ -90,4 +104,22 @@ async function LatestPosts() {
     );
   }
   return posts.map((p) => <PostCard key={p.id} post={p} />);
+}
+
+async function PopularTags() {
+  const tags = await getPopularTags();
+  if (!tags.length) return null;
+  return (
+    <nav aria-label="인기 태그" className="flex flex-wrap justify-center gap-2">
+      {tags.map(({ tag, count }) => (
+        <Link
+          key={tag}
+          href={tagPath(tag)}
+          className="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
+        >
+          #{tag} <span className="text-xs text-zinc-400">{count}</span>
+        </Link>
+      ))}
+    </nav>
+  );
 }

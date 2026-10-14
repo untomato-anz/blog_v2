@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
+import { ChatWidgetLoader } from "@/components/chat/chat-widget-loader";
 import { SiteHeader } from "@/components/site-header";
+import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,14 +21,20 @@ const DESCRIPTION =
   "팝업부터 전시, 축제, 공연까지. 내 주변에서 열리는 다양한 이벤트를 한눈에 발견하고, 오늘의 새로운 경험을 찾아보세요.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://blog-v2-eta-neon.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: { default: TITLE, template: "%s | hi here" },
   description: DESCRIPTION,
   applicationName: "hi here",
-  alternates: { canonical: "/" },
+  // Canonical URLs are set per page; a root-level canonical would leak to every route.
+  alternates: { types: { "application/rss+xml": "/rss.xml" } },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    other: process.env.NAVER_SITE_VERIFICATION
+      ? { "naver-site-verification": process.env.NAVER_SITE_VERIFICATION }
+      : undefined,
+  },
   openGraph: {
     type: "website",
-    url: "/",
     siteName: "hi here",
     locale: "ko_KR",
     title: TITLE,
@@ -47,6 +56,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <SiteHeader />
         {children}
+        <Suspense fallback={null}>
+          <ChatWidgetLoader />
+        </Suspense>
       </body>
     </html>
   );
